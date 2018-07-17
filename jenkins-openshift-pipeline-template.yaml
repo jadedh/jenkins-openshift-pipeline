@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Template
 metadata:
   creationTimestamp: null
-  name: my_template
+  name: pipeline
 objects:
 - apiVersion: v1
   kind: BuildConfig
