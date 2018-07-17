@@ -1,0 +1,56 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  creationTimestamp: '2018-07-13T18:37:29Z'
+  labels:
+    app: pipeline
+    name: pipeline
+  name: pipeline
+  namespace: jenkinspipeline
+  resourceVersion: '154510'
+  selfLink: /apis/build.openshift.io/v1/namespaces/jenkinspipeline/buildconfigs/pipeline
+  uid: cc192166-86cb-11e8-b4c0-06326ac2b6d6
+spec:
+  nodeSelector: {}
+  output: {}
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        node() {
+            stage 'build'
+            openshiftBuild(namespace: 'development',buildConfig: 'myphp',showBuildLogs: 'true')
+            
+            stage 'deploy in Development'
+            openshiftDeploy(namespace: 'development',deploymentConfig: 'myphp',replicaCount:'1')
+            
+            stage 'Approve Deploy to Testing'
+            timeout(time: 2, unit: 'DAYS') {
+                input message: 'Approve to Testing?'
+            }
+            
+            stage 'deploy in Testing'
+            openshiftDeploy(namespace: 'testing',deploymentConfig: 'myphp',replicaCount:'1')
+            
+            stage 'Approve Deploy to Production'
+            timeout(time: 2, unit: 'DAYS') {
+                input message: 'Approve to Production?'
+            }
+            
+            stage 'deploy in Production'
+            openshiftDeploy(namespace: 'production',deploymentConfig: 'myphp',replicaCount:'1')
+        }
+    type: JenkinsPipeline
+  triggers:
+    - github:
+        secret: secret101
+      type: GitHub
+    - generic:
+        secret: secret101
+      type: Generic
+status:
+  lastVersion: 19
