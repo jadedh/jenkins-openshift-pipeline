@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: pipeline
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: pipeline
+      name: pipeline
+    name: pipeline
+  spec:
+    nodeSelector: {}
+    output: {}
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      type: None
+    strategy:
+      jenkinsPipelineStrategy:
+        jenkinsfile: " node() {\n
+  stage 'build'\n
+  openshiftBuild(namespace: '{{stages[1]}}',buildConfig:'{{appname}}',showBuildLogs: 'true')\n
+{% for stage in stages[1:] %}
+	stage 'Approve Deploy to {{stage}}'\n 
+	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to {{stage}}?'}\n
+
+	stage 'Deploy to {{stage}}' \n
+	openshiftDeploy(namespace: '{{stage}}',deploymentConfig: '{{appname}}',replicaCount:'1')\n
+
+{% endfor %}
+}"
+type: JenkinsPipeline
+triggers:
+    - github:
+        secret: secret101
+      type: GitHub
+    - generic:
+        secret: secret101
+      type: Generic
+status:
+    lastVersion: 0
