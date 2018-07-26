@@ -23,15 +23,17 @@ objects:
     strategy:
       jenkinsPipelineStrategy:
         jenkinsfile: " node() {\n
-  stage 'build'\n
+  stage ('build'){\n
   openshiftBuild(namespace: '{{stages[1]}}',buildConfig:'{{appname}}',showBuildLogs: 'true')\n
+  }\n
 {% for stage in stages[1:] %}
-	stage 'Approve Deploy to {{stage}}'\n 
+	stage ('Approve Deploy to {{stage}}'){\n 
 	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to {{stage}}?'}\n
+  }
 
-	stage 'Deploy to {{stage}}' \n
+	stage ('Deploy to {{stage}}'){ \n
 	openshiftDeploy(namespace: '{{stage}}',deploymentConfig: '{{appname}}',replicaCount:'1')\n
-
+  }
 {% endfor %}
 }"
 type: JenkinsPipeline
