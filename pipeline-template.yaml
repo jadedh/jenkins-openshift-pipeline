@@ -23,25 +23,32 @@ objects:
     strategy:
       jenkinsPipelineStrategy:
         jenkinsfile: " node() {\n
-  stage 'build'\n
-  openshiftBuild(namespace: 'development',buildConfig:'myphp',showBuildLogs: 'true')\n
-	stage 'Approve Deploy to development'\n 
-	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to development?'}\n
+  stage ('build'){\n
+    openshiftBuild(namespace: 'dev',buildConfig:'myphp',showBuildLogs: 'true')\n
+  }\n
+	stage ('Approve Deploy to dev'){\n 
+	 timeout(time: 2, unit: 'DAYS') {input message: 'Approve to dev?'}\n
+  }
 
-	stage 'Deploy to development' \n
-	openshiftDeploy(namespace: 'development',deploymentConfig: 'myphp',replicaCount:'1')\n
+	stage ('Deploy to dev'){ \n
+	 openshiftDeploy(namespace: 'dev',deploymentConfig: 'myphp',replicaCount:'1')\n
+  }\n
 
-	stage 'Approve Deploy to testing'\n 
-	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to testing?'}\n
+	stage ('Approve Deploy to test'){\n 
+	 timeout(time: 2, unit: 'DAYS') {input message: 'Approve to test?'}\n
+  }
 
-	stage 'Deploy to testing' \n
-	openshiftDeploy(namespace: 'testing',deploymentConfig: 'myphp',replicaCount:'1')\n
+	stage ('Deploy to test'){ \n
+	 openshiftDeploy(namespace: 'test',deploymentConfig: 'myphp',replicaCount:'1')\n
+  }\n
 
-	stage 'Approve Deploy to production'\n 
-	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to production?'}\n
+	stage ('Approve Deploy to prod'){\n 
+	 timeout(time: 2, unit: 'DAYS') {input message: 'Approve to prod?'}\n
+  }
 
-	stage 'Deploy to production' \n
-	openshiftDeploy(namespace: 'production',deploymentConfig: 'myphp',replicaCount:'1')\n
+	stage ('Deploy to prod'){ \n
+	 openshiftDeploy(namespace: 'prod',deploymentConfig: 'myphp',replicaCount:'1')\n
+  }\n
 
 }"
 type: JenkinsPipeline

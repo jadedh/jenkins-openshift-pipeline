@@ -24,16 +24,17 @@ objects:
       jenkinsPipelineStrategy:
         jenkinsfile: " node() {\n
   stage ('build'){\n
-  openshiftBuild(namespace: '{{stages[1]}}',buildConfig:'{{appname}}',showBuildLogs: 'true')\n
+    openshiftBuild(namespace: '{{stages[0]}}',buildConfig:'{{appname}}',showBuildLogs: 'true')\n
   }\n
-{% for stage in stages[1:] %}
+{% for stage in stages %}
 	stage ('Approve Deploy to {{stage}}'){\n 
-	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to {{stage}}?'}\n
+	 timeout(time: 2, unit: 'DAYS') {input message: 'Approve to {{stage}}?'}\n
   }
 
 	stage ('Deploy to {{stage}}'){ \n
-	openshiftDeploy(namespace: '{{stage}}',deploymentConfig: '{{appname}}',replicaCount:'1')\n
-  }
+	 openshiftDeploy(namespace: '{{stage}}',deploymentConfig: '{{appname}}',replicaCount:'1')\n
+  }\n
+
 {% endfor %}
 }"
 type: JenkinsPipeline
