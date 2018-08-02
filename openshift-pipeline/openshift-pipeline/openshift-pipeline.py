@@ -25,17 +25,17 @@ def jenkins_func(args):
 	print 'jenkins pipeline instantiated...'
 
 	# Create & deploy Jenkins
-	# subprocess.call("oc new-project cicd", shell=True)
-	# subprocess.call("oc project cicd", shell=True)
-	# subprocess.call("oc new-app jenkins-persistent", shell=True)
+	subprocess.call("oc new-project cicd", shell=True)
+	subprocess.call("oc project cicd", shell=True)
+	subprocess.call("oc new-app jenkins-persistent", shell=True)
 
-	# # Create service account
-	# for arg in args.stages:
-	# 	subprocess.call("oc new-project " + arg, shell=True)
-	# 	subprocess.call("oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n " + arg, shell=True)
+	# Create service account
+	for arg in args.stages:
+		subprocess.call("oc new-project " + arg, shell=True)
+		subprocess.call("oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n " + arg, shell=True)
 
-	# for y in args.stages[2:]:
-	# 	subprocess.call("oc policy add-role-to-group system:image-puller system:serviceaccounts:" +args.stages[0]+" -n "+y, shell=True)
+	for y in args.stages[2:]:
+		subprocess.call("oc policy add-role-to-group system:image-puller system:serviceaccounts:" +args.stages[0]+" -n "+y, shell=True)
 	
 	print "Provide your Application name. Name must match the application name created in every stages"
 	appname = args.appname
@@ -123,7 +123,6 @@ def main():
 	parser.add_argument('command', choices=FUNCTION_MAP.keys())
 	parser.add_argument('appname', type= stage_type, help="Application name") 
 	parser.add_argument('stages', type= stage_type, nargs='+',help="stages name for the pipeline")
-	
 
 	args = parser.parse_args()
 
