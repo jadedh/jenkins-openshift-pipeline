@@ -5,9 +5,6 @@ import sys
 import argparse
 import re
 from string import Template
-from jinja2 import Environment
-from jinja2 import FileSystemLoader
-
 
 if len(sys.argv) < 2:
 	print 'Pipeline must contain two or more stages'
@@ -22,7 +19,7 @@ def stage_type(x, pat = re.compile(r"[a-z0-9]([-a-z0-9]*[a-z0-9])?")):
 
 def jenkins_func(args):
 
-	print 'jenkins pipeline instantiated...'
+	print 'jenkins pipeline...'
 
 	# Create & deploy Jenkins
 	subprocess.call("oc new-project cicd", shell=True)
@@ -93,13 +90,6 @@ def jenkins_func(args):
 	f.write("status:\n")
 	f.write("    lastVersion: 0\n")
 
-	# j2_env = Environment(loader=FileSystemLoader('templates'),trim_blocks=True)
-	# template = j2_env.get_template('pipeline_template.j2')
-	# rendered_file = template.render(stages = args.stages, appname = appname)
-	# print(rendered_file)
-	# f= open("pipeline-template.yaml", "w+")
-	# f.write(rendered_file)
-
 	print "Proceed to deploy your applications on the projects"
 
 	#oc new-app jenkins-template.yaml
@@ -108,11 +98,11 @@ def jenkins_func(args):
 
 def gocd_func(args):
 
-	print 'GoCD'
+	print 'GoCD...'
 	
-	# subprocess.call("oc new-project gocd", shell=True)
-	# subprocess.call("oc project gocd", shell=True)
-	# subprocess.call("oc new-app -f https://raw.githubusercontent.com/atbentley/openshift-gocd/master/gocd.template.yaml", shell=True)
+	subprocess.call("oc new-project gocd", shell=True)
+	subprocess.call("oc project gocd", shell=True)
+	subprocess.call("oc new-app -f https://raw.githubusercontent.com/jadedh/openshift-gocd/master/gocd.template.yaml", shell=True)
 	return 0
 
 def main():
@@ -128,7 +118,7 @@ def main():
 
 	func = FUNCTION_MAP[args.command]
 	func(args)
-	# flak8, pep8
+	#pep8
 
 if __name__ == '__main__':
 	main()
