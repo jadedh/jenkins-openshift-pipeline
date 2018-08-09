@@ -22,17 +22,31 @@ def jenkins_func(args):
 	print 'jenkins pipeline...'
 
 	# Create & deploy Jenkins
-	# subprocess.call("oc new-project cicd", shell=True)
-	# subprocess.call("oc project cicd", shell=True)
-	# subprocess.call("oc new-app jenkins-persistent", shell=True)
+	subprocess.call("oc new-project " + args.cicdname, shell=True)
+	subprocess.call("oc project cicd", shell=True)
+	subprocess.call("oc new-app jenkins-persistent", shell=True)
 
+	child = subprocess.Popen('oc get projects',shell=True,stdout=subprocess.PIPE)
+	output = child.communicate()[0]
+
+	if args.cicdname in output:
+		print "cicd project name " + args.cicdname + " already exist, choose another name, exit"
+		sys.exit(1)
+
+	for arg in args.stages:
+		stage = arg + " "
+		if stage in output:
+			print "project " + arg + " already exist, choose another name, exit"
+			sys.exit(1)
+
+	
 	# Create service account
-	# for arg in args.stages:
-	# 	subprocess.call("oc new-project " + arg, shell=True)
-	# 	subprocess.call("oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n " + arg, shell=True)
+	for arg in args.stages:
+		subprocess.call("oc new-project " + arg, shell=True)
+		subprocess.call("oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n " + arg, shell=True)
 
-	# for y in args.stages[2:]:
-	# 	subprocess.call("oc policy add-role-to-group system:image-puller system:serviceaccounts:" +args.stages[0]+" -n "+y, shell=True)
+	for y in args.stages[2:]:
+		subprocess.call("oc policy add-role-to-group system:image-puller system:serviceaccounts:" +args.stages[0]+" -n "+y, shell=True)
 	
 	print "Provide your Application name. Name must match the application name created in every stages"
 	appname = args.appname
@@ -110,13 +124,14 @@ def main():
 					'jenkins' : jenkins_func }
 
 	parser = argparse.ArgumentParser(description='Build ci/cd pipeline on OpenShift')
-	parser.add_argument('command', choices=FUNCTION_MAP.keys())
-	parser.add_argument('appname', type= stage_type, help="Application name") 
-	parser.add_argument('stages', type= stage_type, nargs='+',help="stages name for the pipeline")
+	parser.add_argument('--cicd', required= True, choices=FUNCTION_MAP.keys())
+	parser.add_argument('cicdname', type= stage_type, help="CICD project name")
+	parser.add_argument('--appname', required=True, type= stage_type, help="Application name") 
+	parser.add_argument('--stages', required=True, type= stage_type, nargs='+',help="stages name for the pipeline")
 
 	args = parser.parse_args()
 
-	func = FUNCTION_MAP[args.command]
+	func = FUNCTION_MAP[args.cicd]
 	func(args)
 	#pep8
 
