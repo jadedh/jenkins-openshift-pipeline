@@ -21,14 +21,10 @@ def jenkins_func(args):
 
 	print 'jenkins pipeline...'
 
-	# Create & deploy Jenkins
-	subprocess.call("oc new-project " + args.cicdname, shell=True)
-	subprocess.call("oc project cicd", shell=True)
-	subprocess.call("oc new-app jenkins-persistent", shell=True)
-
 	child = subprocess.Popen('oc get projects',shell=True,stdout=subprocess.PIPE)
 	output = child.communicate()[0]
 
+	# Check existing project names
 	if args.cicdname in output:
 		print "cicd project name " + args.cicdname + " already exist, choose another name, exit"
 		sys.exit(1)
@@ -39,11 +35,18 @@ def jenkins_func(args):
 			print "project " + arg + " already exist, choose another name, exit"
 			sys.exit(1)
 
-	
+	# Create & deploy Jenkins
+	subprocess.call("oc new-project " + args.cicdname, shell=True)
+	subprocess.call("oc project " + args.cicdname, shell=True)
+	subprocess.call("oc new-app jenkins-persistent", shell=True)
+
 	# Create service account
 	for arg in args.stages:
 		subprocess.call("oc new-project " + arg, shell=True)
 		subprocess.call("oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n " + arg, shell=True)
+		if args.github:
+			subprocess.call(args.github, shell=True)
+
 
 	for y in args.stages[2:]:
 		subprocess.call("oc policy add-role-to-group system:image-puller system:serviceaccounts:" +args.stages[0]+" -n "+y, shell=True)
@@ -93,7 +96,6 @@ def jenkins_func(args):
 		f.write(t.substitute(stage = stage, appname =args.appname))
 	f.write("}\"\n")
 	f.write("type: JenkinsPipeline\n")
-	f.write("type: JenkinsPipeline\n")
 	f.write("triggers:\n")
 	f.write("    - github:\n")
 	f.write("        secret: secret101\n")
@@ -106,8 +108,9 @@ def jenkins_func(args):
 
 	print "Proceed to deploy your applications on the projects"
 
-	#oc new-app jenkins-template.yaml
-	#oc start-build pipeline
+	
+	subprocess.call("oc new-app openshift-template.yaml", shell=True)
+	# oc start-build pipeline
 	return 0
 
 def gocd_func(args):
@@ -126,8 +129,9 @@ def main():
 	parser = argparse.ArgumentParser(description='Build ci/cd pipeline on OpenShift')
 	parser.add_argument('--cicd', required= True, choices=FUNCTION_MAP.keys())
 	parser.add_argument('cicdname', type= stage_type, help="CICD project name")
-	parser.add_argument('--appname', required=True, type= stage_type, help="Application name") 
+	parser.add_argument('--appname', required=True, type= stage_type, help="Application name")
 	parser.add_argument('--stages', required=True, type= stage_type, nargs='+',help="stages name for the pipeline")
+	parser.add_argument('--github', nargs='+',help="Github repository URL")
 
 	args = parser.parse_args()
 
