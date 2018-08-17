@@ -43,9 +43,13 @@ def jenkins_func(args):
 	# Create service account
 	for arg in args.stages:
 		subprocess.call("oc new-project " + arg, shell=True)
-		subprocess.call("oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n " + arg, shell=True)
+		subprocess.call("oc policy add-role-to-user edit system:serviceaccount:" + args.cicdname + ":jenkins -n " + arg, shell=True)
 		if args.github:
 			subprocess.call(args.github, shell=True)
+			try:
+				subprocess.call("oc expose svc/" + args.github, shell=True)
+			except:
+				pass
 
 
 	for y in args.stages[2:]:
@@ -108,7 +112,7 @@ def jenkins_func(args):
 
 	print "Proceed to deploy your applications on the projects"
 
-	
+	subprocess.call("oc project " + args.cicdname, shell=True)
 	subprocess.call("oc new-app openshift-template.yaml", shell=True)
 	# oc start-build pipeline
 	return 0
