@@ -85,8 +85,8 @@ def jenkins_func(args):
 	f.write("      jenkinsPipelineStrategy:\n")
 	f.write("        jenkinsfile: \" node() {\\n\n")
 	f.write("  stage ('build'){\\n\n")
-	t = Template("  openshiftBuild(namespace: '$stage', buildConfig: '$appname', showBuildlog: \'true\')}\\n\n")
-	f.write(t.substitute(stage = args.stages[0], appname =args.appname))
+	# t = Template("  openshiftBuild(namespace: '$stage', buildConfig: '$appname', showBuildlog: \'true\')}\\n\n")
+	# f.write(t.substitute(stage = args.stages[0], appname =args.appname))
 	
 	for stage in args.stages:
 		t = Template("stage ('Approve Deploy to $stage'){\\n\n") 
@@ -96,6 +96,8 @@ def jenkins_func(args):
 
  		t = Template("stage ('Deploy to $stage'){ \\n")
  		f.write(t.substitute(stage = stage, appname =args.appname))
+ 		t = Template("  openshiftBuild(namespace: '$stage', buildConfig: '$appname', showBuildlog: \'true\')}\\n\n")
+		f.write(t.substitute(stage = args.stages[0], appname =args.appname))
 		t = Template("openshiftDeploy(namespace: '$stage',deploymentConfig: '$appname',replicaCount:'1')}\\n\n")
 		f.write(t.substitute(stage = stage, appname =args.appname))
 	f.write("}\"\n")
@@ -113,7 +115,10 @@ def jenkins_func(args):
 	print "Proceed to deploy your applications on the projects"
 
 	subprocess.call("oc project " + args.cicdname, shell=True)
-	subprocess.call("oc new-app openshift-template.yaml", shell=True)
+	try:
+		subprocess.call("oc new-app openshift-template.yaml", shell=True)
+	except:
+		subprocess.call("oc new-app openshift-template.yaml", shell=True)
 	# oc start-build pipeline
 	return 0
 
