@@ -44,10 +44,10 @@ def jenkins_func(args):
 	for arg in args.stages:
 		subprocess.call("oc new-project " + arg, shell=True)
 		subprocess.call("oc policy add-role-to-user edit system:serviceaccount:" + args.cicdname + ":jenkins -n " + arg, shell=True)
-		if args.github:
-			subprocess.call(args.github, shell=True)
+		if args.command:
+			subprocess.call(args.command, shell=True)
 			try:
-				subprocess.call("oc expose svc/" + args.github, shell=True)
+				subprocess.call("oc expose svc/" + args.appname, shell=True)
 			except:
 				pass
 
@@ -83,22 +83,19 @@ def jenkins_func(args):
 	f.write("      type: None\n")
 	f.write("    strategy:\n")
 	f.write("      jenkinsPipelineStrategy:\n")
-	f.write("        jenkinsfile: \" node() {\\n\n")
-	f.write("  stage ('build'){\\n\n")
-	# t = Template("  openshiftBuild(namespace: '$stage', buildConfig: '$appname', showBuildlog: \'true\')}\\n\n")
-	# f.write(t.substitute(stage = args.stages[0], appname =args.appname))
+	f.write("        jenkinsfile: \" node() {\\n")
 	
 	for stage in args.stages:
-		t = Template("stage ('Approve Deploy to $stage'){\\n\n") 
+		t = Template("stage ('Approve Deploy to $stage'){\\n") 
 		f.write(t.substitute(stage = stage))
-		t = Template("timeout(time: 2, unit: 'DAYS') {input message: 'Approve to $stage?'}}\\n\\n\n")
+		t = Template("	timeout(time: 2, unit: 'DAYS') {input message: 'Approve to $stage?'}\\n}\\n\\n")
  		f.write(t.substitute(stage = stage, appname =args.appname))
 
  		t = Template("stage ('Deploy to $stage'){ \\n")
  		f.write(t.substitute(stage = stage, appname =args.appname))
- 		t = Template("  openshiftBuild(namespace: '$stage', buildConfig: '$appname', showBuildlog: \'true\')}\\n\n")
+ 		t = Template("	openshiftBuild(namespace: '$stage', buildConfig: '$appname', showBuildlog: \'true\')\\n")
 		f.write(t.substitute(stage = args.stages[0], appname =args.appname))
-		t = Template("openshiftDeploy(namespace: '$stage',deploymentConfig: '$appname',replicaCount:'1')}\\n\n")
+		t = Template("	openshiftDeploy(namespace: '$stage',deploymentConfig: '$appname',replicaCount:'1')\\n}\\n")
 		f.write(t.substitute(stage = stage, appname =args.appname))
 	f.write("}\"\n")
 	f.write("type: JenkinsPipeline\n")
@@ -119,6 +116,7 @@ def jenkins_func(args):
 		subprocess.call("oc new-app openshift-template.yaml", shell=True)
 	except:
 		subprocess.call("oc new-app openshift-template.yaml", shell=True)
+
 	# oc start-build pipeline
 	return 0
 
@@ -140,7 +138,7 @@ def main():
 	parser.add_argument('cicdname', type= stage_type, help="CICD project name")
 	parser.add_argument('--appname', required=True, type= stage_type, help="Application name")
 	parser.add_argument('--stages', required=True, type= stage_type, nargs='+',help="stages name for the pipeline")
-	parser.add_argument('--github', nargs='+',help="Github repository URL")
+	parser.add_argument('--command', nargs='+',help="command to run in all new-projects e.g. oc new-app [github]")
 
 	args = parser.parse_args()
 
